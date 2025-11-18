@@ -1,23 +1,37 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "./index.css";
 
-import App from './App';
-import SinglePlayer from './pages/SinglePlayer';
-import InviteLink from './pages/InviteLink';
-import Multiplayer from './pages/Multiplayer';
+import App from "./App";
+import Homepage from "./pages/homepage";
+import SinglePlayer from "./pages/SinglePlayer";
+import InviteLink from "./pages/InviteLink";
+import Multiplayer from "./pages/Multiplayer";
+import SingleSummaryPage from "./pages/singleSummaryPage";
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />} />
-      <Route path="/single-player" element={<SinglePlayer />} />
-      <Route path="/invite" element={<InviteLink />} />
-      <Route path="/multiplayer" element={<Multiplayer />} />
-    </Routes>
-  </BrowserRouter>
+  <React.StrictMode>
+    <Router>
+      <Routes>
+        {/* Homepage */}
+        <Route path="/" element={<Homepage />} />
+
+        {/* Game modes */}
+        <Route path="/single-player" element={<SinglePlayer />} />
+        <Route path="/multiplayer" element={<InviteLink />} />
+
+        {/* Multiplayer actual gameplay */}
+        <Route path="/multiplayer-game" element={<Multiplayer />} />
+
+        {/* Single player summary page */}
+        <Route path="/single-summary" element={<SingleSummaryPage />} />
+
+        {/* Backup: using App.js if needed for testing */}
+        <Route path="/app" element={<App />} />
+      </Routes>
+    </Router>
+  </React.StrictMode>
 );
