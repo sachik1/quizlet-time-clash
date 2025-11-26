@@ -112,9 +112,9 @@ function HomePage() {
             <span className="text-sm font-medium text-gray-800">Test</span>
           </button>
 
-          {/* TimeClash (replaces Blocks) – links to App.js */}
+          {/* TimeClash (replaces Blocks) – links to mode select page (App.js) */}
           <Link
-            to="/timeclash"
+            to="/app"   // <-- changed from "/timeclash" to "/app"
             className="flex items-center gap-3 bg-gray-100 hover:bg-gray-200 rounded-xl px-4 py-3 text-left"
           >
             <div className="w-8 h-8 rounded-md bg-purple-500 flex items-center justify-center text-white">

@@ -40,10 +40,11 @@ export default function SinglePlayer() {
   // 2 minutes = 120 seconds
   const [timeLeft, setTimeLeft] = useState(120);
   const [ended, setEnded] = useState(false);
+  const [allQuestionsDone, setAllQuestionsDone] = useState(false);
 
   const [cards] = useState(() => flashcards);
 
-  // random order to guarantee every card is seen once
+  // random order to guarantee every card is seen once (no repeats)
   const [order] = useState(() =>
     shuffleArray([...Array(flashcards.length).keys()])
   );
@@ -81,23 +82,22 @@ export default function SinglePlayer() {
   const isOutOfTime = timeLeft <= 0;
   const currentCard = cards[currentCardIndex];
 
-  // Timer countdown
+  // Timer countdown: stop if time is up OR game ended because questions finished
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0 || ended || allQuestionsDone) return;
 
     const intervalId = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [timeLeft]);
+  }, [timeLeft, ended, allQuestionsDone]);
 
-  // When time runs out → go to summary screen once
+  // When time runs out OR all questions finished → go to summary (once)
   useEffect(() => {
-    if (timeLeft <= 0 && !ended) {
+    if ((timeLeft <= 0 || allQuestionsDone) && !ended) {
       setEnded(true);
 
-      // freeze timer at 0
       const finalStats = stats;
       const finalResults = questionResults;
 
@@ -109,7 +109,7 @@ export default function SinglePlayer() {
         },
       });
     }
-  }, [timeLeft, ended, navigate, stats, questionResults]);
+  }, [timeLeft, allQuestionsDone, ended, navigate, stats, questionResults]);
 
   // Format as M:SS
   const minutes = Math.floor(timeLeft / 60);
@@ -120,27 +120,25 @@ export default function SinglePlayer() {
     stats.oneTry + stats.twoTries + stats.threeTries + stats.fourPlus;
 
   // choose next card:
-  // - first go through `order` so each card is seen once
-  // - then random from all cards
+  // - go through `order` so each card is seen once in random order
+  // - when we've asked the last card, mark allQuestionsDone instead of repeating
   const moveToNextQuestion = () => {
     setFeedback("");
     setReveal({ visible: false, text: "" });
 
     setAskedCount((prevAsked) => {
-      let nextAsked = prevAsked;
-      let nextIndex;
+      const nextAsked = prevAsked + 1;
 
-      if (prevAsked < cards.length - 1) {
-        // still going through first pass
-        nextAsked = prevAsked + 1;
-        nextIndex = order[nextAsked];
-      } else {
-        // after all cards seen, fully random
-        nextAsked = prevAsked;
-        nextIndex = Math.floor(Math.random() * cards.length);
+      // if we've already shown the last card, end the question rotation
+      if (nextAsked >= cards.length) {
+        setAllQuestionsDone(true);
+        return prevAsked; // keep index as-is; summary screen will trigger
       }
 
+      // otherwise move to next card in random order
+      const nextIndex = order[nextAsked];
       setCurrentCardIndex(nextIndex);
+
       return nextAsked;
     });
 
@@ -190,7 +188,7 @@ export default function SinglePlayer() {
     updateStatsAndResults(4);
 
     setTimeout(() => {
-      if (!isOutOfTime) {
+      if (!isOutOfTime && !allQuestionsDone) {
         moveToNextQuestion();
       }
     }, 1500);
@@ -321,7 +319,7 @@ export default function SinglePlayer() {
 
           {/* Question / Reveal text */}
           <div className="mb-8 min-h-[60px] flex items-center justify-center">
-            {isOutOfTime || ended || !currentCard ? (
+            {isOutOfTime || ended || allQuestionsDone || !currentCard ? (
               <p className="text-lg text-gray-900 text-center">
                 Time&apos;s up!
               </p>
@@ -337,30 +335,34 @@ export default function SinglePlayer() {
           </div>
 
           {/* Answer input */}
-          {!isOutOfTime && !ended && currentCard && !reveal.visible && (
-            <>
-              <div className="mb-2">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Your answer
-                </label>
-                <input
-                  type="text"
-                  placeholder="Type the artist's name"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                />
-              </div>
+          {!isOutOfTime &&
+            !ended &&
+            !allQuestionsDone &&
+            currentCard &&
+            !reveal.visible && (
+              <>
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                    Your answer
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Type the artist's name"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                  />
+                </div>
 
-              {/* Attempts & feedback */}
-              <p className="text-xs text-gray-500 mb-1">
-                Attempts: {attempts}/3
-              </p>
-              {feedback && (
-                <p className="text-xs mb-4 text-gray-700">{feedback}</p>
-              )}
-            </>
-          )}
+                {/* Attempts & feedback */}
+                <p className="text-xs text-gray-500 mb-1">
+                  Attempts: {attempts}/3
+                </p>
+                {feedback && (
+                  <p className="text-xs mb-4 text-gray-700">{feedback}</p>
+                )}
+              </>
+            )}
 
           {/* Bottom row */}
           <div className="flex items-center justify-between mt-4">
@@ -368,7 +370,7 @@ export default function SinglePlayer() {
               <FiFlag className="text-sm" />
             </button>
 
-            {!isOutOfTime && !ended && currentCard && (
+            {!isOutOfTime && !ended && !allQuestionsDone && currentCard && (
               <div className="flex items-center gap-4">
                 <button
                   className="text-sm font-medium text-indigo-500 hover:text-indigo-600"

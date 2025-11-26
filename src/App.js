@@ -40,8 +40,8 @@ function App() {
             </div>
           </Link>
 
-          {/* --- MULTIPLAYER --- */}
-          <Link to="/invite">
+          {/* --- MULTIPLAYER (Fixed Path) --- */}
+          <Link to="/multiplayer">
             <div className="bg-blue-600 text-white w-72 h-72 rounded-xl flex justify-center items-center text-2xl font-semibold cursor-pointer border-4 border-blue-300 hover:scale-105 transition-transform">
               Multiplayer
             </div>

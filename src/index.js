@@ -9,6 +9,7 @@ import SinglePlayer from "./pages/SinglePlayer";
 import InviteLink from "./pages/InviteLink";
 import Multiplayer from "./pages/Multiplayer";
 import SingleSummaryPage from "./pages/singleSummaryPage";
+import MultiplayerSummaryPage from "./pages/multiplayerSummaryPage";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -16,20 +17,25 @@ root.render(
   <React.StrictMode>
     <Router>
       <Routes>
-        {/* Homepage */}
+        {/* Main Quizlet-style set page */}
         <Route path="/" element={<Homepage />} />
 
-        {/* Game modes */}
+        {/* TimeClash mode selection screen */}
+        <Route path="/timeclash" element={<App />} />
+
+        {/* Single-player flow */}
         <Route path="/single-player" element={<SinglePlayer />} />
-        <Route path="/multiplayer" element={<InviteLink />} />
-
-        {/* Multiplayer actual gameplay */}
-        <Route path="/multiplayer-game" element={<Multiplayer />} />
-
-        {/* Single player summary page */}
         <Route path="/single-summary" element={<SingleSummaryPage />} />
 
-        {/* Backup: using App.js if needed for testing */}
+        {/* Multiplayer lobby + game */}
+        <Route path="/multiplayer" element={<InviteLink />} />
+        <Route path="/multiplayer-game" element={<Multiplayer />} />
+        <Route
+          path="/multiplayerSummaryPage"
+          element={<MultiplayerSummaryPage />}
+        />
+
+        {/* Optional backup route */}
         <Route path="/app" element={<App />} />
       </Routes>
     </Router>
