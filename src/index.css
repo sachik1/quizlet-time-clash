@@ -1,3 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full font-sans bg-app-bg text-text-main;
+  }
+
+  body {
+    @apply antialiased;
+    /* Soft navy / indigo radial background like Quizlet */
+    background: radial-gradient(
+        circle at top left,
+        #1d234b 0,
+        #050720 40%,
+        #020617 100%
+      );
+  }
+
+  ::selection {
+    background-color: #4f46e5;
+    color: #e5e7eb;
+  }
+}

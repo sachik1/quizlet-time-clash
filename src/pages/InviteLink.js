@@ -142,36 +142,44 @@ export default function InviteLink() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col relative">
+    <div className="min-h-screen bg-gradient-to-b from-app-bg via-app-bg-soft to-black text-text-main flex flex-col relative">
       {/* --- TOP BAR --- */}
-      <header className="w-full px-6 py-4 flex items-center bg-white shadow-sm">
+      <header className="w-full px-6 py-4 flex items-center bg-nav-bg backdrop-blur-md border-b border-slate-800">
         <div className="flex items-center gap-2 flex-1">
-          <FiClock className="text-blue-600 text-2xl" />
-          <span className="font-semibold text-lg">Time Clash</span>
-          <FiChevronDown className="text-gray-600 text-xl cursor-pointer" />
+          <Link
+            to="/"
+            className="flex items-center gap-2 cursor-pointer group"
+          >
+            <FiClock className="text-accent-primary text-2xl" />
+            <span className="font-semibold text-lg text-white group-hover:text-accent-primary transition-colors">
+              Time Clash
+            </span>
+            <FiChevronDown className="text-slate-400 text-xl group-hover:text-slate-200 transition-colors" />
+          </Link>
         </div>
 
         <div className="flex-1 flex justify-center">
-          <span className="text-sm font-semibold text-gray-700 tracking-wide">
+          <span className="text-sm font-semibold text-accent-gold tracking-wide">
             0:00
           </span>
         </div>
 
-        <div className="flex items-center justify-end gap-4 flex-1 text-gray-600">
-          <FiVolumeX className="cursor-pointer hover:text-gray-800" />
-          <FiSettings className="cursor-pointer hover:text-gray-800" />
-          <FiX className="cursor-pointer hover:text-gray-800" />
+        <div className="flex items-center justify-end gap-4 flex-1 text-slate-400">
+          <FiVolumeX className="cursor-pointer hover:text-accent-primary transition-colors" />
+          <FiSettings className="cursor-pointer hover:text-accent-primary transition-colors" />
+          <FiX className="cursor-pointer hover:text-rose-400 transition-colors" />
         </div>
       </header>
 
       {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 px-8 py-10 flex flex-col items-center">
-        {/* Invite Link box */}
-        <section className="w-full max-w-3xl flex flex-col items-center mb-12">
-          <h2 className="text-lg font-semibold mb-4">Invite Link</h2>
+      <main className="flex-1 px-4 md:px-8 py-8 flex flex-col items-center">
+        <section className="w-full max-w-3xl flex flex-col items-center mb-10">
+          <h2 className="text-lg font-semibold mb-4 text-white">
+            Invite Link
+          </h2>
 
-          <div className="w-full bg-gray-100 rounded-xl px-6 py-4 flex items-center justify-between">
-            <span className="text-blue-600 underline break-all text-sm sm:text-base">
+          <div className="w-full bg-card-bg-alt/90 rounded-3xl px-6 py-4 flex items-center justify-between border border-slate-800 shadow-card-glow">
+            <span className="text-sm sm:text-base text-sky-300 break-all">
               {loading
                 ? "Generating invite link..."
                 : error
@@ -179,7 +187,7 @@ export default function InviteLink() {
                 : inviteUrl}
             </span>
             <button
-              className="ml-4 p-2 rounded-full hover:bg-gray-200 text-gray-600 disabled:opacity-50"
+              className="ml-4 p-2 rounded-full hover:bg-slate-800 text-slate-300 disabled:opacity-40 transition-colors"
               onClick={handleCopy}
               disabled={!inviteUrl || !!error}
             >
@@ -188,25 +196,27 @@ export default function InviteLink() {
           </div>
 
           {copyStatus && (
-            <p className="mt-2 text-xs text-gray-500">{copyStatus}</p>
+            <p className="mt-2 text-xs text-text-muted">{copyStatus}</p>
           )}
-          {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+          {error && (
+            <p className="mt-2 text-xs text-rose-400">{error}</p>
+          )}
         </section>
 
         {/* Players row */}
-        <section className="w-full max-w-3xl flex flex-col items-center mb-8">
-          <h3 className="text-md font-semibold mb-4">Players</h3>
+        <section className="w-full max-w-3xl flex flex-col items-center">
+          <h3 className="text-md font-semibold mb-4 text-white">Players</h3>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading players…</p>
+            <p className="text-sm text-text-muted">Loading players…</p>
           ) : error ? (
-            <p className="text-sm text-red-500">
+            <p className="text-sm text-rose-400">
               Cannot load players because the room was not created.
             </p>
           ) : (
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="w-full bg-card-bg/80 rounded-3xl border border-slate-800 shadow-card-glow px-6 py-5 flex flex-wrap gap-4 justify-center">
               {players.length === 0 && (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-slate-500">
                   Waiting for players to join…
                 </p>
               )}
@@ -215,7 +225,7 @@ export default function InviteLink() {
                   key={p.id}
                   className={`w-10 h-10 rounded-full ${
                     avatarColors[idx % avatarColors.length]
-                  } flex items-center justify-center text-white font-semibold`}
+                  } flex items-center justify-center text-white font-semibold shadow-pill-soft`}
                   title={p.name}
                 >
                   {p.name?.charAt(0)?.toUpperCase() || "?"}
@@ -227,7 +237,7 @@ export default function InviteLink() {
       </main>
 
       {/* --- BOTTOM BAR --- */}
-      <footer className="w-full bg-white border-t mt-auto">
+      <footer className="w-full bg-nav-bg border-t border-slate-800 mt-auto">
         <div className="max-w-4xl mx-auto py-4 flex justify-center">
           <Link
             to={
@@ -237,7 +247,7 @@ export default function InviteLink() {
             }
           >
             <button
-              className="px-8 py-2 rounded-full bg-blue-600 text-white font-semibold text-sm shadow hover:bg-blue-700 disabled:opacity-50"
+              className="px-8 py-2 rounded-full bg-accent-primary text-white font-semibold text-sm shadow-pill-soft hover:shadow-[0_0_30px_rgba(99,102,241,0.8)] disabled:opacity-40 transition-all"
               disabled={!room || !room.code || !!error}
             >
               Start Game
@@ -248,26 +258,26 @@ export default function InviteLink() {
 
       {/* --- NAME POPUP: ONLY FOR GUESTS WHO HAVEN'T JOINED YET --- */}
       {isGuest && !hasJoined && (
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
-          <div className="bg-white rounded-2xl shadow-lg px-6 py-6 w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-3">
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+          <div className="bg-card-bg-alt rounded-3xl shadow-card-glow px-6 py-6 w-full max-w-sm border border-slate-800">
+            <h2 className="text-lg font-semibold mb-3 text-white">
               Enter your name to join this game
             </h2>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="text-xs text-text-muted mb-4">
               The lobby starts with 0 players. Each person joins by entering
               their name.
             </p>
             <form onSubmit={handleNameSubmit}>
               <input
                 type="text"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-700 bg-slate-900/60 rounded-lg px-3 py-2 text-sm mb-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-accent-primary"
                 placeholder="e.g. Sachi"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
               />
               <button
                 type="submit"
-                className="w-full py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                className="w-full py-2 rounded-full bg-accent-primary text-white text-sm font-semibold hover:shadow-[0_0_24px_rgba(99,102,241,0.8)] disabled:opacity-40 transition-all"
                 disabled={!playerName.trim() || !room}
               >
                 Join lobby

@@ -9,21 +9,21 @@ import {
   FiVolume2,
   FiFlag,
 } from "react-icons/fi";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { getRoomByCode, subscribeToPlayers } from "../supabaseClient";
 
-// ---- Song → Artist flashcards ----
+// ---- Element → Symbol flashcards ----
 const flashcards = [
-  { term: "Thriller", definition: "Michael Jackson" },
-  { term: "Levitating", definition: "Dua Lipa" },
-  { term: "You Belong with Me", definition: "Taylor Swift" },
-  { term: "Uptown Funk", definition: "Bruno Mars" },
-  { term: "Dangerous Woman", definition: "Ariana Grande" },
-  { term: "Starboy", definition: "The Weeknd" },
-  { term: "One Dance", definition: "Drake" },
-  { term: "What Makes You Beautiful", definition: "One Direction" },
-  { term: "Shape of You", definition: "Ed Sheeran" },
-  { term: "Baby", definition: "Justin Bieber" },
+  { term: "Silver", definition: "Ag" },
+  { term: "Gold", definition: "Au" },
+  { term: "Oxygen", definition: "O" },
+  { term: "Helium", definition: "He" },
+  { term: "Hydrogen", definition: "H" },
+  { term: "Carbon", definition: "C" },
+  { term: "Potassium", definition: "K" },
+  { term: "Calcium", definition: "Ca" },
+  { term: "Nitrogen", definition: "N" },
+  { term: "Iron", definition: "Fe" },
 ];
 
 // Shuffle helper (Fisher–Yates)
@@ -121,7 +121,7 @@ export default function Multiplayer() {
   // Per-question results (for summary)
   const [questionResults, setQuestionResults] = useState(() =>
     flashcards.map((card) => ({
-      term: `Who is the artist of the song "${card.term}"?`,
+      term: `What is the element symbol for "${card.term}"?`,
       attempts: 0, // 0 = never completed
     }))
   );
@@ -300,105 +300,117 @@ export default function Multiplayer() {
     gameOver || !currentCard || !answer.trim() || !!reveal;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-app-bg via-app-bg-soft to-black text-text-main flex flex-col">
       {/* --- TOP BAR --- */}
-      <header className="w-full px-6 py-4 flex items-center bg-white shadow-sm">
+      <header className="w-full px-6 py-4 flex items-center bg-nav-bg backdrop-blur-md border-b border-slate-800">
         <div className="flex items-center gap-2 flex-1">
-          <FiClock className="text-blue-600 text-2xl" />
-          <span className="font-semibold text-lg">Time Clash</span>
-          <FiChevronDown className="text-gray-600 text-xl cursor-pointer" />
+          <Link
+            to="/"
+            className="flex items-center gap-2 cursor-pointer group"
+          >
+            <FiClock className="text-accent-primary text-2xl" />
+            <span className="font-semibold text-lg text-white group-hover:text-accent-primary transition-colors">
+              Time Clash
+            </span>
+            <FiChevronDown className="text-slate-400 text-xl group-hover:text-slate-200 transition-colors" />
+          </Link>
         </div>
 
         <div className="flex-1 flex justify-center">
-          <span className="text-sm font-semibold text-yellow-500 tracking-wide">
+          <span className="text-sm font-semibold text-accent-gold tracking-wide">
             {formattedTime}
           </span>
         </div>
 
-        <div className="flex items-center justify-end gap-4 flex-1 text-gray-600">
+        <div className="flex items-center justify-end gap-4 flex-1 text-slate-400">
           <div className="flex items-center gap-3 mr-4">
-            <span className="text-sm text-gray-500">Player Turn:</span>
+            <span className="text-sm text-slate-400">Player Turn:</span>
             {currentPlayer ? (
               <div
-                className={`w-9 h-9 rounded-full ${currentPlayer.color} text-white flex items-center justify-center font-semibold`}
+                className={`w-9 h-9 rounded-full ${currentPlayer.color} text-white flex items-center justify-center font-semibold shadow-pill-soft`}
                 title={currentPlayer.name}
               >
                 {currentPlayer.initial}
               </div>
             ) : (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-slate-500">
                 {loadingPlayers
                   ? "Loading players…"
                   : "Waiting for players to join"}
               </span>
             )}
           </div>
-          <FiVolumeX className="cursor-pointer hover:text-gray-800" />
-          <FiSettings className="cursor-pointer hover:text-gray-800" />
-          <FiX className="cursor-pointer hover:text-gray-800" />
+          <FiVolumeX className="cursor-pointer hover:text-accent-primary transition-colors" />
+          <FiSettings className="cursor-pointer hover:text-accent-primary transition-colors" />
+          <FiX className="cursor-pointer hover:text-rose-400 transition-colors" />
         </div>
       </header>
 
       {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 px-8 py-6 flex flex-col items-center">
+      <main className="flex-1 px-4 md:px-8 py-6 flex flex-col items-center">
         {/* Question index */}
-        <div className="w-full max-w-4xl text-sm mb-2">
-          <span className="text-gray-500 mr-2">Question:</span>
-          <span className="text-blue-600 font-semibold">
-            {Math.min(currentQuestionIndex + 1, order.length)}/{order.length}
-          </span>
+        <div className="w-full max-w-4xl text-sm mb-2 flex items-center justify-between">
+          <div>
+            <span className="text-slate-400 mr-2">Question:</span>
+            <span className="text-sky-300 font-semibold">
+              {Math.min(currentQuestionIndex + 1, order.length)}/{order.length}
+            </span>
+          </div>
         </div>
 
         {/* Global stats bar */}
         <div className="w-full max-w-4xl text-sm mb-4 flex items-center gap-3">
-          <span className="text-gray-500">Answered:</span>
+          <span className="text-slate-400">Answered:</span>
 
-          <span className="text-green-500 font-semibold">{stats.oneTry}</span>/
-          <span className="text-yellow-500 font-semibold">
+          <span className="text-emerald-400 font-semibold">
+            {stats.oneTry}
+          </span>
+          /
+          <span className="text-amber-300 font-semibold">
             {stats.twoTries}
           </span>
           /
-          <span className="text-gray-500 font-semibold">
+          <span className="text-slate-300 font-semibold">
             {stats.threeTries}
           </span>
           /
-          <span className="text-red-500 font-semibold">
+          <span className="text-rose-400 font-semibold">
             {stats.fourPlus}
           </span>
 
-          <span className="ml-4 text-xs text-gray-400">
+          <span className="ml-4 text-xs text-slate-500">
             ({totalAnswered}/{order.length})
           </span>
         </div>
 
         {/* Card */}
-        <section className="w-full max-w-4xl bg-white rounded-2xl shadow-md px-8 py-6">
+        <section className="w-full max-w-4xl bg-card-bg-alt/90 rounded-3xl shadow-card-glow border border-slate-800 px-6 md:px-8 py-6">
           {/* Top of card */}
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-gray-500 uppercase">
+            <span className="text-sm font-semibold text-slate-400 uppercase">
               Term
             </span>
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <FiVolume2 className="text-xl text-gray-500" />
+            <button className="p-2 rounded-full hover:bg-slate-800">
+              <FiVolume2 className="text-xl text-slate-400" />
             </button>
           </div>
 
           {/* Question / state text */}
           <div className="mb-8 min-h-[60px] flex items-center justify-center">
             {gameOver ? (
-              <p className="text-lg text-center text-gray-800">
+              <p className="text-lg text-center text-slate-100">
                 {isOutOfTime ? "Time’s up!" : "All questions completed!"}
               </p>
             ) : reveal ? (
-              <p className="text-2xl text-center font-semibold text-gray-800">
+              <p className="text-2xl text-center font-semibold text-white">
                 Correct Answer: {reveal}
               </p>
             ) : currentCard ? (
-              <p className="text-lg text-center text-gray-900">
-                Who is the artist of the song "{currentCard.term}"?
+              <p className="text-lg text-center text-slate-100">
+                What is the element symbol for "{currentCard.term}"?
               </p>
             ) : (
-              <p className="text-lg text-center text-gray-800">
+              <p className="text-lg text-center text-slate-100">
                 Waiting for question…
               </p>
             )}
@@ -408,34 +420,38 @@ export default function Multiplayer() {
           {!gameOver && currentCard && !reveal && (
             <>
               <div className="mb-2">
-                <label className="block text-sm text-gray-600 mb-1">
+                <label className="block text-sm text-slate-400 mb-1">
                   Your answer
                 </label>
                 <input
                   type="text"
                   placeholder="Type the artist's name"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-xl border border-slate-700 px-4 py-3 bg-slate-900/70 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-accent-primary focus:border-accent-primary"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                 />
               </div>
-              <p className="text-xs text-gray-600">Attempts: {attempts}/3</p>
+              <p className="text-xs text-slate-400">
+                Attempts: {attempts}/3
+              </p>
               {feedback && (
-                <p className="text-xs mt-1 mb-3 text-gray-700">{feedback}</p>
+                <p className="text-xs mt-1 mb-3 text-slate-300">
+                  {feedback}
+                </p>
               )}
             </>
           )}
 
           {/* Bottom row */}
           <div className="flex items-center justify-between mt-4">
-            <button className="text-xs text-gray-400 hover:text-gray-600">
+            <button className="text-xs text-slate-500 hover:text-slate-300">
               <FiFlag />
             </button>
 
             {!gameOver && currentCard && !reveal && (
               <div className="flex items-center gap-4">
                 <button
-                  className="text-sm font-medium text-indigo-500 hover:text-indigo-600"
+                  className="text-sm font-medium text-indigo-300 hover:text-indigo-200"
                   onClick={handleDontKnow}
                 >
                   Don’t know?
@@ -445,9 +461,9 @@ export default function Multiplayer() {
                   onClick={handleAnswer}
                   className={`px-5 py-2 rounded-full text-sm font-semibold ${
                     isAnswerDisabled
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
+                      ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+                      : "bg-accent-primary text-white hover:shadow-[0_0_24px_rgba(129,140,248,0.9)]"
+                  } transition-all`}
                 >
                   Answer
                 </button>
@@ -457,7 +473,7 @@ export default function Multiplayer() {
             {!gameOver && currentCard && reveal && (
               <button
                 onClick={handleNextQuestion}
-                className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold hover:bg-blue-700"
+                className="px-5 py-2 bg-accent-primary text-white rounded-full text-sm font-semibold hover:shadow-[0_0_24px_rgba(129,140,248,0.9)] transition-all"
               >
                 Next question
               </button>

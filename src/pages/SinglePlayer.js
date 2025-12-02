@@ -8,20 +8,20 @@ import {
   FiVolume2,
   FiFlag,
 } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
-// Song → Artist flashcard set
+// Element → Symbol flashcard set
 const flashcards = [
-  { term: "Thriller", definition: "Michael Jackson" },
-  { term: "Levitating", definition: "Dua Lipa" },
-  { term: "You Belong with Me", definition: "Taylor Swift" },
-  { term: "Uptown Funk", definition: "Bruno Mars" },
-  { term: "Dangerous Woman", definition: "Ariana Grande" },
-  { term: "Starboy", definition: "The Weeknd" },
-  { term: "One Dance", definition: "Drake" },
-  { term: "What Makes You Beautiful", definition: "One Direction" },
-  { term: "Shape of You", definition: "Ed Sheeran" },
-  { term: "Baby", definition: "Justin Bieber" },
+  { term: "Silver", definition: "Ag" },
+  { term: "Gold", definition: "Au" },
+  { term: "Oxygen", definition: "O" },
+  { term: "Helium", definition: "He" },
+  { term: "Hydrogen", definition: "H" },
+  { term: "Carbon", definition: "C" },
+  { term: "Potassium", definition: "K" },
+  { term: "Calcium", definition: "Ca" },
+  { term: "Nitrogen", definition: "N" },
+  { term: "Iron", definition: "Fe" },
 ];
 
 // Fisher–Yates shuffle
@@ -68,7 +68,7 @@ export default function SinglePlayer() {
   // per-question results for summary screen
   const [questionResults, setQuestionResults] = useState(() =>
     flashcards.map((card) => ({
-      term: `Who is the artist of the song "${card.term}"?`,
+      term: `What is the element symbol for "${card.term}"?`,
       attempts: 0, // 0 = never fully completed
     }))
   );
@@ -114,7 +114,9 @@ export default function SinglePlayer() {
   // Format as M:SS
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const formattedTime = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  const formattedTime = `${minutes}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
 
   const totalAnswered =
     stats.oneTry + stats.twoTries + stats.threeTries + stats.fourPlus;
@@ -247,72 +249,79 @@ export default function SinglePlayer() {
     reveal.visible;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-app-bg via-app-bg-soft to-black text-text-main flex flex-col">
       {/* --- TOP BAR --- */}
-      <header className="w-full px-6 py-4 flex items-center bg-white shadow-sm">
-        {/* Left: logo + title */}
+      <header className="w-full px-6 py-4 flex items-center bg-nav-bg backdrop-blur-md border-b border-slate-800">
+        {/* Left: logo + title (click → homepage) */}
         <div className="flex items-center gap-2 flex-1">
-          <FiClock className="text-blue-600 text-2xl" />
-          <span className="font-semibold text-lg">Time Clash</span>
-          <FiChevronDown className="text-gray-600 text-xl cursor-pointer" />
+          <Link
+            to="/"
+            className="flex items-center gap-2 cursor-pointer group"
+          >
+            <FiClock className="text-accent-primary text-2xl" />
+            <span className="font-semibold text-lg text-white group-hover:text-accent-primary transition-colors">
+              Time Clash
+            </span>
+            <FiChevronDown className="text-slate-400 text-xl group-hover:text-slate-200 transition-colors" />
+          </Link>
         </div>
 
         {/* Center: timer */}
         <div className="flex-1 flex justify-center">
-          <span className="text-sm font-semibold text-yellow-500 tracking-wide">
+          <span className="text-sm font-semibold text-accent-gold tracking-wide">
             {formattedTime}
           </span>
         </div>
 
         {/* Right: icons + avatar */}
-        <div className="flex items-center justify-end gap-4 flex-1 text-gray-600">
-          <FiVolumeX className="cursor-pointer hover:text-gray-800" />
-          <FiSettings className="cursor-pointer hover:text-gray-800" />
-          <FiX className="cursor-pointer hover:text-gray-800" />
-          <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold shadow">
+        <div className="flex items-center justify-end gap-4 flex-1 text-slate-400">
+          <FiVolumeX className="cursor-pointer hover:text-accent-primary transition-colors" />
+          <FiSettings className="cursor-pointer hover:text-accent-primary transition-colors" />
+          <FiX className="cursor-pointer hover:text-rose-400 transition-colors" />
+          <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold shadow-pill-soft">
             S
           </div>
         </div>
       </header>
 
       {/* --- CONTENT --- */}
-      <main className="flex-1 px-8 py-6 flex flex-col items-center">
+      <main className="flex-1 px-4 md:px-8 py-6 flex flex-col items-center">
         {/* Stats bar */}
         <div className="w-full max-w-4xl text-sm mb-4 flex items-center gap-3">
-          <span className="text-gray-500 mr-2">Questions Answered:</span>
+          <span className="text-slate-400 mr-2">Questions Answered:</span>
 
-          <span className="font-semibold text-green-500">
+          <span className="font-semibold text-emerald-400">
             {stats.oneTry}
           </span>
-          <span className="text-gray-500">/</span>
+          <span className="text-slate-500">/</span>
 
-          <span className="font-semibold text-yellow-500">
+          <span className="font-semibold text-amber-300">
             {stats.twoTries}
           </span>
-          <span className="text-gray-500">/</span>
+          <span className="text-slate-500">/</span>
 
-          <span className="font-semibold text-gray-500">
+          <span className="font-semibold text-slate-200">
             {stats.threeTries}
           </span>
-          <span className="text-gray-500">/</span>
+          <span className="text-slate-500">/</span>
 
-          <span className="font-semibold text-red-500">
+          <span className="font-semibold text-rose-300">
             {stats.fourPlus}
           </span>
 
-          <span className="ml-4 text-xs text-gray-400">
+          <span className="ml-4 text-xs text-slate-500">
             (Total distinct completed: {totalAnswered}/{cards.length})
           </span>
         </div>
 
         {/* Card */}
-        <section className="w-full max-w-4xl bg-white rounded-2xl shadow-md px-8 py-6">
+        <section className="w-full max-w-4xl bg-card-bg-alt/90 rounded-3xl shadow-card-glow border border-slate-800 px-6 md:px-8 py-6">
           {/* Term + audio icon */}
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            <span className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
               Term
             </span>
-            <button className="p-2 rounded-full hover:bg-gray-100 text-gray-500">
+            <button className="p-2 rounded-full hover:bg-slate-800 text-slate-400">
               <FiVolume2 className="text-xl" />
             </button>
           </div>
@@ -320,16 +329,16 @@ export default function SinglePlayer() {
           {/* Question / Reveal text */}
           <div className="mb-8 min-h-[60px] flex items-center justify-center">
             {isOutOfTime || ended || allQuestionsDone || !currentCard ? (
-              <p className="text-lg text-gray-900 text-center">
+              <p className="text-lg text-slate-100 text-center">
                 Time&apos;s up!
               </p>
             ) : reveal.visible ? (
-              <p className="text-2xl text-gray-900 font-semibold text-center">
+              <p className="text-2xl text-white font-semibold text-center">
                 Correct artist: {reveal.text}
               </p>
             ) : (
-              <p className="text-lg text-gray-900 text-center">
-                Who is the artist of the song "{currentCard.term}"?
+              <p className="text-lg text-slate-100 text-center">
+                What is the element symbol for "{currentCard.term}"?
               </p>
             )}
           </div>
@@ -342,38 +351,38 @@ export default function SinglePlayer() {
             !reveal.visible && (
               <>
                 <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
                     Your answer
                   </label>
                   <input
                     type="text"
                     placeholder="Type the artist's name"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                    className="w-full rounded-xl border border-slate-700 px-4 py-3 text-slate-100 bg-slate-900/70 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary"
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
                   />
                 </div>
 
                 {/* Attempts & feedback */}
-                <p className="text-xs text-gray-500 mb-1">
+                <p className="text-xs text-slate-500 mb-1">
                   Attempts: {attempts}/3
                 </p>
                 {feedback && (
-                  <p className="text-xs mb-4 text-gray-700">{feedback}</p>
+                  <p className="text-xs mb-4 text-slate-300">{feedback}</p>
                 )}
               </>
             )}
 
           {/* Bottom row */}
           <div className="flex items-center justify-between mt-4">
-            <button className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600">
+            <button className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300">
               <FiFlag className="text-sm" />
             </button>
 
             {!isOutOfTime && !ended && !allQuestionsDone && currentCard && (
               <div className="flex items-center gap-4">
                 <button
-                  className="text-sm font-medium text-indigo-500 hover:text-indigo-600"
+                  className="text-sm font-medium text-indigo-300 hover:text-indigo-200"
                   onClick={handleDontKnow}
                   disabled={reveal.visible}
                 >
@@ -382,10 +391,10 @@ export default function SinglePlayer() {
                 <button
                   onClick={handleAnswer}
                   disabled={isAnswerDisabled}
-                  className={`px-5 py-2 rounded-full text-sm font-semibold ${
+                  className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                     isAnswerDisabled
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                      ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+                      : "bg-accent-primary text-white hover:shadow-[0_0_24px_rgba(129,140,248,0.9)]"
                   }`}
                 >
                   Answer
