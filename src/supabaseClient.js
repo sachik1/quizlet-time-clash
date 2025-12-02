@@ -1,12 +1,15 @@
 // src/supabaseClient.js
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const SUPABASE_URL = "https://pmankcjxxjafojxreicx.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtYW5rY2p4eGphZm9qeHJlaWN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxMDEyMTQsImV4cCI6MjA3OTY3NzIxNH0.vbsnTDfpZTBrgBwmRsHNvdZvuggScVwjwYrtErwJavk";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// -------- Local player name --------
+/**
+ * Optional helper – you can still use this if you want.
+ */
 export function getOrCreateLocalPlayerName() {
   const key = "timeclash_player_name";
   let name = localStorage.getItem(key);
@@ -20,97 +23,110 @@ export function getOrCreateLocalPlayerName() {
   return name;
 }
 
-// -------- Room / player helpers --------
+/**
+ * Create an empty room (no players yet).
+ * Table: rooms (id uuid/int, code text)
+ */
+export async function createRoom() {
+  // 6-char room code like "GVJW56"
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-function generateRoomCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let result = "";
-  for (let i = 0; i < 6; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return result;
-}
-
-// Host creates a room and joins it
-export async function createRoomAndJoin() {
-  const playerName = getOrCreateLocalPlayerName();
-  const code = generateRoomCode();
-
-  const { data: room, error: roomError } = await supabase
+  const { data, error } = await supabase
     .from("rooms")
     .insert({ code })
-    .select()
+    .select("*")
     .single();
 
-  if (roomError || !room) {
-    console.error("Error creating room:", roomError);
-    throw roomError || new Error("Failed to create room");
+  if (error) {
+    console.error("createRoom error:", error);
+    throw error;
   }
 
-  const { data: player, error: playerError } = await supabase
-    .from("players")
-    .insert({ room_id: room.id, name: playerName })
-    .select()
-    .single();
-
-  if (playerError || !player) {
-    console.error("Error joining as host:", playerError);
-    throw playerError || new Error("Failed to join room");
-  }
-
-  return { room, player };
+  return data; // { id, code, ... }
 }
 
-// Friend joins an existing room by its code
-export async function joinRoomByCode(code) {
-  const playerName = getOrCreateLocalPlayerName();
-
-  const { data: room, error: roomError } = await supabase
+/**
+ * Get room by code (used by guests joining via link)
+ */
+export async function getRoomByCode(code) {
+  const { data, error } = await supabase
     .from("rooms")
     .select("*")
     .eq("code", code)
-    .single();
+    .maybeSingle();
 
-  if (roomError || !room) {
-    console.error("Error loading room by code:", roomError);
-    throw roomError || new Error("Room not found");
+  if (error) {
+    console.error("getRoomByCode error:", error);
+    throw error;
   }
 
-  const { data: player, error: playerError } = await supabase
-    .from("players")
-    .insert({ room_id: room.id, name: playerName })
-    .select()
-    .single();
-
-  if (playerError || !player) {
-    console.error("Error joining room:", playerError);
-    throw playerError || new Error("Failed to join room");
+  if (!data) {
+    throw new Error("Room not found");
   }
 
-  return { room, player };
+  return data;
 }
 
-// Subscribe to the live list of players in a room
-export function subscribeToPlayers(roomId, onChange) {
+/**
+ * Join an existing room as a player with a given name.
+ * Table: players (id, room_id, name)
+ */
+export async function joinRoom(roomId, playerName) {
+  const { data, error } = await supabase
+    .from("players")
+    .insert({
+      room_id: roomId,
+      name: playerName,
+    })
+    // NOTE: no created_at here, since the column doesn't exist
+    .select("id, room_id, name")
+    .single();
+
+  if (error) {
+    console.error("joinRoom error:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Convenience wrapper: join by room code if you ever need it.
+ */
+export async function joinRoomByCode(roomCode, playerName) {
+  const room = await getRoomByCode(roomCode);
+  return joinRoom(room.id, playerName);
+}
+
+/**
+ * Subscribe to players in a room for realtime lobby updates.
+ */
+export function subscribeToPlayers(roomId, callback) {
+  let active = true;
+
   async function fetchPlayers() {
     const { data, error } = await supabase
       .from("players")
-      .select("*")
+      // NOTE: no created_at here either
+      .select("id, name")
       .eq("room_id", roomId)
-      .order("joined_at", { ascending: true });
+      .order("id", { ascending: true }); // order by id instead of created_at
 
     if (error) {
-      console.error("Error fetching players:", error);
+      console.error("fetchPlayers error:", error);
       return;
     }
-    onChange(data || []);
+    if (active) {
+      callback(data || []);
+    }
   }
 
   // initial load
   fetchPlayers();
 
+  // realtime subscription
   const channel = supabase
-    .channel(`room:${roomId}`)
+    .channel(`players-room-${roomId}`)
     .on(
       "postgres_changes",
       {
@@ -125,5 +141,9 @@ export function subscribeToPlayers(roomId, onChange) {
     )
     .subscribe();
 
-  return () => supabase.removeChannel(channel);
+  // cleanup function
+  return () => {
+    active = false;
+    supabase.removeChannel(channel);
+  };
 }

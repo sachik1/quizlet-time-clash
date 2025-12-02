@@ -1,3 +1,4 @@
+// src/pages/Multiplayer.js
 import React, { useState, useEffect } from "react";
 import {
   FiClock,
@@ -8,7 +9,8 @@ import {
   FiVolume2,
   FiFlag,
 } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getRoomByCode, subscribeToPlayers } from "../supabaseClient";
 
 // ---- Song → Artist flashcards ----
 const flashcards = [
@@ -34,16 +36,60 @@ function shuffleArray(arr) {
   return copy;
 }
 
-// Local multiplayer players
-const PLAYERS = [
-  { name: "Sachi", initial: "S", color: "bg-purple-600" },
-  { name: "Nikhil", initial: "N", color: "bg-orange-500" },
-  { name: "Anya", initial: "A", color: "bg-blue-600" },
-  { name: "Kiran", initial: "K", color: "bg-indigo-500" },
+// Colors to assign to players dynamically
+const PLAYER_COLORS = [
+  "bg-purple-600",
+  "bg-orange-500",
+  "bg-blue-600",
+  "bg-indigo-500",
+  "bg-teal-500",
+  "bg-pink-500",
 ];
 
 export default function Multiplayer() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ---- ROOM + PLAYERS FROM SUPABASE ----
+  const [room, setRoom] = useState(null);
+  const [players, setPlayers] = useState([]); // raw players from Supabase
+  const [loadingPlayers, setLoadingPlayers] = useState(true);
+
+  const searchParams = new URLSearchParams(location.search);
+  const roomCode = searchParams.get("room");
+
+  useEffect(() => {
+    if (!roomCode) return;
+
+    let unsub = null;
+    let isMounted = true;
+
+    async function init() {
+      try {
+        setLoadingPlayers(true);
+        const roomData = await getRoomByCode(roomCode);
+        if (!isMounted) return;
+        setRoom(roomData);
+
+        // Subscribe to players in this room
+        unsub = subscribeToPlayers(roomData.id, (list) => {
+          if (!isMounted) return;
+          setPlayers(list || []);
+        });
+      } catch (err) {
+        console.error("Error loading multiplayer room:", err);
+      } finally {
+        if (isMounted) setLoadingPlayers(false);
+      }
+    }
+
+    init();
+
+    return () => {
+      isMounted = false;
+      if (unsub) unsub();
+    };
+  }, [roomCode]);
 
   // 2-minute timer
   const [timeLeft, setTimeLeft] = useState(120);
@@ -61,10 +107,10 @@ export default function Multiplayer() {
   const [feedback, setFeedback] = useState("");
   const [reveal, setReveal] = useState("");
 
-  // Player turn
+  // Player turn (index into players[])
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
 
-  // Global stats
+  // Global stats (used for summary + "Answered" bar)
   const [stats, setStats] = useState({
     oneTry: 0,
     twoTries: 0,
@@ -80,14 +126,26 @@ export default function Multiplayer() {
     }))
   );
 
-  // Per-player stats (to decide winner)
-  const [playerStats, setPlayerStats] = useState(() =>
-    PLAYERS.map((p) => ({
-      ...p,
+  // Per-player stats (for winner / summary)
+  const [playerStats, setPlayerStats] = useState([]);
+
+  // Initialize playerStats once players load
+  useEffect(() => {
+    if (players.length === 0) return;
+    // if already initialized with same length, don't reset mid-game
+    if (playerStats.length === players.length) return;
+
+    const initialized = players.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      initial: p.name?.charAt(0)?.toUpperCase() || "?",
+      color: PLAYER_COLORS[idx % PLAYER_COLORS.length],
       firstTries: 0,
       totalCorrect: 0,
-    }))
-  );
+    }));
+    setPlayerStats(initialized);
+    setCurrentPlayerIndex(0);
+  }, [players, playerStats.length]);
 
   const isOutOfTime = timeLeft <= 0;
   const noMoreQuestions = currentQuestionIndex >= order.length;
@@ -95,7 +153,18 @@ export default function Multiplayer() {
 
   const currentCard =
     noMoreQuestions ? null : flashcards[order[currentQuestionIndex]];
-  const currentPlayer = PLAYERS[currentPlayerIndex];
+
+  const currentPlayer =
+    players.length > 0
+      ? {
+          ...players[currentPlayerIndex],
+          initial:
+            players[currentPlayerIndex].name?.charAt(0)?.toUpperCase() || "?",
+          color:
+            PLAYER_COLORS[currentPlayerIndex % PLAYER_COLORS.length] ||
+            "bg-gray-400",
+        }
+      : null;
 
   // TIMER
   useEffect(() => {
@@ -154,8 +223,9 @@ export default function Multiplayer() {
       return updated;
     });
 
-    // Per-player stats
+    // Per-player stats: match by index
     setPlayerStats((prev) => {
+      if (playerIndex >= prev.length) return prev;
       const updated = [...prev];
       const p = { ...updated[playerIndex] };
 
@@ -180,11 +250,16 @@ export default function Multiplayer() {
       i + 1 < order.length ? i + 1 : order.length
     );
 
-    setCurrentPlayerIndex((i) => (i + 1) % PLAYERS.length);
+    // rotate through joined players
+    setCurrentPlayerIndex((i) => {
+      if (players.length === 0) return 0;
+      return (i + 1) % players.length;
+    });
   };
 
   const handleAnswer = () => {
     if (gameOver || !currentCard || !answer.trim() || reveal) return;
+    if (players.length === 0) return; // no players yet
 
     const user = answer.trim().toLowerCase();
     const correct = currentCard.definition.trim().toLowerCase();
@@ -210,6 +285,8 @@ export default function Multiplayer() {
 
   const handleDontKnow = () => {
     if (gameOver || !currentCard || reveal) return;
+    if (players.length === 0) return;
+
     const cardIndex = order[currentQuestionIndex];
     setReveal(currentCard.definition);
     updateStatsForQuestion(4, currentPlayerIndex, cardIndex);
@@ -241,11 +318,20 @@ export default function Multiplayer() {
         <div className="flex items-center justify-end gap-4 flex-1 text-gray-600">
           <div className="flex items-center gap-3 mr-4">
             <span className="text-sm text-gray-500">Player Turn:</span>
-            <div
-              className={`w-9 h-9 rounded-full ${currentPlayer.color} text-white flex items-center justify-center font-semibold`}
-            >
-              {currentPlayer.initial}
-            </div>
+            {currentPlayer ? (
+              <div
+                className={`w-9 h-9 rounded-full ${currentPlayer.color} text-white flex items-center justify-center font-semibold`}
+                title={currentPlayer.name}
+              >
+                {currentPlayer.initial}
+              </div>
+            ) : (
+              <span className="text-xs text-gray-400">
+                {loadingPlayers
+                  ? "Loading players…"
+                  : "Waiting for players to join"}
+              </span>
+            )}
           </div>
           <FiVolumeX className="cursor-pointer hover:text-gray-800" />
           <FiSettings className="cursor-pointer hover:text-gray-800" />
@@ -263,7 +349,7 @@ export default function Multiplayer() {
           </span>
         </div>
 
-        {/* Global stats */}
+        {/* Global stats bar */}
         <div className="w-full max-w-4xl text-sm mb-4 flex items-center gap-3">
           <span className="text-gray-500">Answered:</span>
 
@@ -307,9 +393,13 @@ export default function Multiplayer() {
               <p className="text-2xl text-center font-semibold text-gray-800">
                 Correct Answer: {reveal}
               </p>
-            ) : (
+            ) : currentCard ? (
               <p className="text-lg text-center text-gray-900">
                 Who is the artist of the song "{currentCard.term}"?
+              </p>
+            ) : (
+              <p className="text-lg text-center text-gray-800">
+                Waiting for question…
               </p>
             )}
           </div>
